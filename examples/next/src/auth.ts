@@ -1,7 +1,9 @@
 import NextAuth from 'next-auth';
 
+import { config } from '../.ursa-auth.config';
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [],
-  secret: process.env.AUTH_SECRET!,
+  secret: config.authSecrets,
 });
 
