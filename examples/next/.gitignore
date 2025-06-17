@@ -33,6 +33,9 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# UrsaAuth config file
+.ursa-auth*.ts
+
 # vercel
 .vercel
 

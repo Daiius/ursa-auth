@@ -2,17 +2,17 @@
 // avoid broken vim syntax highlight...
 import type { AuthConfig } from '@auth/core'
 import GitHub from '@auth/core/providers/github'
+import { log } from './log'
 
-import { config } from 'dotenv';
-config({ path: '.env.development' });
+import { config } from '../.ursa-auth.config'
 
 export const authConfig: AuthConfig = {
   basePath: '/api/auth',
-  secret: process.env.AUTH_SECRET!, // Auth.jsでセッション管理しないのでいらない？
+  secret: config.authSecrets, // Auth.jsでセッション管理しないのでいらない？
   providers: [
     GitHub({
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+      clientId: config.github?.clientId,
+      clientSecret: config.github?.clientSecret,
     }),
   ],
   //pages: {
@@ -20,19 +20,25 @@ export const authConfig: AuthConfig = {
   //},
   callbacks: {
     async redirect({ url, baseUrl }) {
-      console.log('redirect to: ', url)
-      // TODO check url host safety!!!
+      // リダイレクト先urlがリスト内に無ければ拒否
+      if (
+        !config.allowedRedirectPatterns
+        .some(allowedUrl => url.startsWith(allowedUrl))
+      ) {
+        log(`${url} is not allowed (Auth.js redirect callback)`)
+        return baseUrl
+      }
       return url;
     },
     async jwt({ token, profile }) {
-      // 自作JWT発行
+      // TODO 自作JWT発行
       return token
     },
   },
   // Auth.js v5 では trustHost: true が前提らしい
   // ということは不正なHost値を受け付けない設定が必須
   trustHost: true,
-  debug: true,
+  debug: process.env.NODE_ENV === 'development',
 };
 
 
