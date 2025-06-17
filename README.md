@@ -3,26 +3,30 @@
 
 UrsaAuth is an authentication server for Web/Mobile Login and API server protection.
 
+## config
+`.ursa-auth.config.ts` is required for both client and server.
+
+see `ursa-auth.config.type.ts` to define your config.
+
 # How to setup test environment
-you can test UrsaAuth function by running 3 servers in your local environemnt.
-## 1. Start UrsaAuth server
-(Assuming you are at repository root dir...)
+you can test UrsaAuth by running 3 servers in your local environemnt.
+- UrsaAuth server
+- Next.js server (UrsaAuth login)
+- API server (use UrsaAuth protection)
+
+## install packages
+run `pnpm install` in 3 locations
+- repository root
+- examples/next
+- examples/api-server
+
+## docker compose
+you can start these servers by docker compose command.
 ```
-pnpm install
-pnpm dev
+docker compose up
 ```
-## 2. Start Next.js test web application
-(Assuming you are at repository root dir...)
-```
-cd examples/next
-pnpm install
-pnpm dev
-```
-## 3. Start API server
-(Assuming you are at repository root dir...)
-```
-cd examples/api-server
-pnpm install
-pnpm dev
-```
+
+- UrsaAuth server: localhost:4000
+- Next.js: localhost:3000
+- API server: localhost:5000
 
