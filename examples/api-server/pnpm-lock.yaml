@@ -14,6 +14,9 @@ importers:
       '@hono/node-server':
         specifier: ^1.14.4
         version: 1.14.4(hono@4.7.11)
+      debug:
+        specifier: ^4.4.1
+        version: 4.4.1
       dotenv:
         specifier: ^16.5.0
         version: 16.5.0
@@ -209,6 +212,15 @@ packages:
   '@types/node@20.19.1':
     resolution: {integrity: sha512-jJD50LtlD2dodAEO653i3YF04NWak6jN3ky+Ri3Em3mGR39/glWiboM/IePaRbgwSfqM1TpGXfAg8ohn/4dTgA==}
 
+  debug@4.4.1:
+    resolution: {integrity: sha512-KcKCqiftBJcZr++7ykoDIEwSa3XWowTfNPo92BYxjXiyYEVrUQh2aLyhxBCwww+heortUFxEJYcRzosstTEBYQ==}
+    engines: {node: '>=6.0'}
+    peerDependencies:
+      supports-color: '*'
+    peerDependenciesMeta:
+      supports-color:
+        optional: true
+
   dotenv@16.5.0:
     resolution: {integrity: sha512-m/C+AwOAr9/W1UOIZUo232ejMNnJAJtYQjUbHoNTBNTJSvqzzDh7vnrei3o3r3m9blf6ZoDkvcw0VmozNRFJxg==}
     engines: {node: '>=12'}
@@ -232,6 +244,9 @@ packages:
 
   jose@6.0.11:
     resolution: {integrity: sha512-QxG7EaliDARm1O1S8BGakqncGT9s25bKL1WSf6/oa17Tkqwi8D2ZNglqCF+DsYF88/rV66Q/Q2mFAy697E1DUg==}
+
+  ms@2.1.3:
+    resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
   oauth4webapi@3.5.3:
     resolution: {integrity: sha512-2bnHosmBLAQpXNBLOvaJMyMkr4Yya5ohE5Q9jqyxiN+aa7GFCzvDN1RRRMrp0NkfqRR2MTaQNkcSUCCjILD9oQ==}
@@ -355,6 +370,10 @@ snapshots:
     dependencies:
       undici-types: 6.21.0
 
+  debug@4.4.1:
+    dependencies:
+      ms: 2.1.3
+
   dotenv@16.5.0: {}
 
   esbuild@0.25.5:
@@ -395,6 +414,8 @@ snapshots:
   hono@4.7.11: {}
 
   jose@6.0.11: {}
+
+  ms@2.1.3: {}
 
   oauth4webapi@3.5.3: {}
 

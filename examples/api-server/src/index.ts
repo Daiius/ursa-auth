@@ -1,34 +1,25 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
+import { logger } from 'hono/logger'
+import { ursaAuthMiddleware } from './middlewares'
+declare module 'hono' {
+  interface Context {
+    ursaAuthUser: Record<string, unknown>
+  }
+}
 
-import { decode } from '@auth/core/jwt'
-
-import { config } from '../.ursa-auth.config'
 
 const app = new Hono()
+
+app.use('*', logger())
 
 app.get('/', (c) => {
   return c.text('Hello Hono!')
 })
 
-app.get('/hello-ursa-auth', async c => {
+app.get('/hello-ursa-auth', ursaAuthMiddleware,  async c => {
   console.log('/hello-ursa-auth called')
-  const authHeader = c.req.raw.headers.get('Authorization')
-  if (!authHeader) return c.body('Unauthorized.', 401)
-  const jwe = authHeader.replace('bearer', '').trim()
-
-  try {
-    const jwt = await decode({ 
-      token: jwe, 
-      secret: config.authSecrets, 
-      salt: 'authjs.session-token' 
-    });
-    if (!jwt) return c.body('Unauthorized.', 401)
-    return c.body(JSON.stringify(jwt), 200)
-  } catch (err) {
-    console.error(err)
-    return c.body('Unauthorized.', 401)
-  }
+  return c.body(JSON.stringify(c.ursaAuthUser), 200)
 })
 
 serve({
