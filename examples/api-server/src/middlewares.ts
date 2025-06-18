@@ -2,6 +2,7 @@ import type { MiddlewareHandler } from 'hono'
 import { log } from './log'
 
 const ursaAuthUrl = process.env.URSA_AUTH_URL!
+log('ursaAuthUrl: ', ursaAuthUrl)
 
 /**
  * Authorization: Bearer にUrsaAuthの発行した
@@ -27,12 +28,15 @@ export const ursaAuthMiddleware: MiddlewareHandler = async (c, next) => {
     headers: { Authorization: `Bearer ${token}` }
   })
   if (!response.ok) {
-    log(`fetch from ursa-auth server failed: ${response.statusText} ${response.status}`)
+    log(
+      `fetch from ursa-auth server failed: ${response.statusText} ${response.status}`
+    )
     // どんな理由で失敗したかユーザには通知しない
     // ログには出力する
     return c.text('Unauthorized', 401)
   }
   const user = await response.json()
+  log('user@middleware: %o', user)
   
   c.set('ursaAuthUser', user)
 

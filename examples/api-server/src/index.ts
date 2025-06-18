@@ -2,8 +2,9 @@ import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { logger } from 'hono/logger'
 import { ursaAuthMiddleware } from './middlewares'
+import { log } from './log'
 declare module 'hono' {
-  interface Context {
+  interface ContextVariableMap {
     ursaAuthUser: Record<string, unknown>
   }
 }
@@ -18,8 +19,10 @@ app.get('/', (c) => {
 })
 
 app.get('/hello-ursa-auth', ursaAuthMiddleware,  async c => {
-  console.log('/hello-ursa-auth called')
-  return c.body(JSON.stringify(c.ursaAuthUser), 200)
+  log('/hello-ursa-auth called')
+  const user = c.get('ursaAuthUser')
+  log('user@handler: %o', user)
+  return c.json(user)
 })
 
 serve({
