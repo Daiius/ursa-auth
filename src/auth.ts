@@ -4,16 +4,13 @@ import type { AuthConfig } from '@auth/core'
 import GitHub from '@auth/core/providers/github'
 import { log } from './log'
 
-import { config } from '../.ursa-auth.config'
+import { config } from './config'
 
 export const authConfig: AuthConfig = {
   basePath: '/api/auth',
   secret: config.authSecrets, // Auth.jsでセッション管理しないのでいらない？
   providers: [
-    GitHub({
-      clientId: config.github?.clientId,
-      clientSecret: config.github?.clientSecret,
-    }),
+    GitHub(config.providers.github!),
   ],
   //pages: {
   //  signIn: '/signin', // 専用のかっこいいログインページをつくれるかも？

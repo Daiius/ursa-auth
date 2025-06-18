@@ -1,20 +1,15 @@
 import { z } from 'zod'
 
-export const ursaAuthClientConfigSchema = z.object({
-  authSecrets: z.array(z.string()),
-})
-
 export const ursaAuthServerConfigSchema = z.object({
   host: z.string(),
-  providers: z.array(
-    z.object({
-      name: z.string(),
-      clientId: z.string(),
-      clientSecret: z.string(),
-    })
-  ),
+  authSecrets: z.array(z.string()),
+  providers: z.object({
+    github: z.object({
+        clientId: z.string(),
+        clientSecret: z.string(),
+      }).optional(),
+  }).strict(),
   allowedRedirectPatterns: z.array(z.string()),
   allowedMobileRedirectPatterns: z.array(z.string()),
 })
-.merge(ursaAuthClientConfigSchema)
 

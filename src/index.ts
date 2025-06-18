@@ -4,6 +4,7 @@ import { logger } from 'hono/logger'
 
 import { Auth } from '@auth/core'
 import { decode } from '@auth/core/jwt'
+import type { JWT } from '@auth/core/jwt'
 import { authConfig } from './auth'
 
 import { log } from './log'
@@ -85,25 +86,60 @@ app.all('/api/auth/*', async c => {
   return response;
 })
 
-app.get('/me', async c => {
-  const authHeader = c.req.raw.headers.get('Authorization')?.split(' ')
-  if ( authHeader?.length !== 2 || authHeader[0] !== 'Bearer') {
-    return c.text('Unauthorized', 401)
+const getBearerToken = (
+  authorizationHeaderContent: string | undefined
+): string | undefined  => {
+  const authHeader = authorizationHeaderContent?.split(' ')
+  if (authHeader?.length !== 2 || authHeader[0] !== 'Bearer') {
+    log('inavlid authorization header: ', authorizationHeaderContent)
+    return undefined
   }
+  return authHeader[1].trim()
+}
 
-  const jwe = authHeader[1].trim()
+const decodeJWE = async (token: string): Promise<JWT|null> => {
   try {
     const jwt = await decode({ 
-      token: jwe, 
+      token, 
       secret: config.authSecrets, 
       salt: 'authjs.session-token' 
     });
-    if (!jwt) return c.body('Unauthorized.', 401)
-    return c.body(JSON.stringify(jwt), 200)
+    return jwt
   } catch (err) {
     console.error(err)
-    return c.body('Unauthorized.', 401)
+    log('exception occurred while decoding jwe, %o', err)
+    return null
   }
+}
+
+// UrsaAuthのBearer tokenを解析し、
+// ユーザの情報を取得します
+app.get('/me', async c => {
+  const jwe = getBearerToken(c.req.header('Authorization'))
+  if (!jwe) {
+    log('failed to get bearer token')
+    return c.text('Unauthorized', 401)
+  }
+  const jwt = await decodeJWE(jwe)
+  if (!jwt) {
+    log('faild to decode JWE')
+    return c.text('Unauthorized', 401)
+  }
+  return c.json(jwt)
+})
+
+app.get('/validate', async c => {
+  const jwe = getBearerToken(c.req.header('Authorization'))
+  if (!jwe) {
+    log('failed to get bearer token')
+    return c.text('Unauthorized', 401)
+  }
+  const jwt = await decodeJWE(jwe)
+  if (!jwt) {
+    log('faild to decode JWE')
+    return c.text('Unauthorized', 401)
+  }
+  return c.body(null, 204) 
 })
 
 serve({
