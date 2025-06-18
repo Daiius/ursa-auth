@@ -3,10 +3,11 @@ import { Hono } from 'hono'
 import { logger } from 'hono/logger'
 
 import { Auth } from '@auth/core'
+import { decode } from '@auth/core/jwt'
 import { authConfig } from './auth'
 
 import { log } from './log'
-import { config } from '../.ursa-auth.config'
+import { config } from './config'
 
 
 const app = new Hono()
@@ -37,7 +38,8 @@ app.get('/mobile', async c => {
   return c.redirect(callbackUrl)
 })
 
-// authConfigのbasePathと合わせる必要がありそう
+// OAuth認証関連のエンドポイント
+// NOTE: authConfigのbasePathと合わせる必要がありそう
 app.all('/api/auth/*', async c => {
   const { req } = c
   const url = new URL(req.url)
@@ -81,6 +83,27 @@ app.all('/api/auth/*', async c => {
   }
 
   return response;
+})
+
+app.get('/me', async c => {
+  const authHeader = c.req.raw.headers.get('Authorization')?.split(' ')
+  if ( authHeader?.length !== 2 || authHeader[0] !== 'Bearer') {
+    return c.text('Unauthorized', 401)
+  }
+
+  const jwe = authHeader[1].trim()
+  try {
+    const jwt = await decode({ 
+      token: jwe, 
+      secret: config.authSecrets, 
+      salt: 'authjs.session-token' 
+    });
+    if (!jwt) return c.body('Unauthorized.', 401)
+    return c.body(JSON.stringify(jwt), 200)
+  } catch (err) {
+    console.error(err)
+    return c.body('Unauthorized.', 401)
+  }
 })
 
 serve({

@@ -20,6 +20,9 @@ importers:
       hono:
         specifier: ^4.7.11
         version: 4.7.11
+      zod:
+        specifier: ^3.25.67
+        version: 3.25.67
     devDependencies:
       '@types/debug':
         specifier: ^4.1.12
@@ -277,6 +280,9 @@ packages:
   undici-types@6.21.0:
     resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
 
+  zod@3.25.67:
+    resolution: {integrity: sha512-idA2YXwpCdqUSKRCACDE6ItZD9TZzy3OZMtpfLoh6oPR47lipysRrJfjzMqFxQ3uJuUPyUeWe1r9vLH33xO/Qw==}
+
 snapshots:
 
   '@auth/core@0.39.1':
@@ -443,3 +449,5 @@ snapshots:
   typescript@5.8.3: {}
 
   undici-types@6.21.0: {}
+
+  zod@3.25.67: {}
