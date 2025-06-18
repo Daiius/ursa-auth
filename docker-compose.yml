@@ -16,7 +16,7 @@ services:
       context: examples/next
     container_name: ursa-auth-test-next
     env_file:
-      - .env.development
+      - examples/next/.env.development
     ports:
       - 3000:3000
     volumes:
@@ -33,7 +33,7 @@ services:
     ports:
       - 5000:5000
     env_file:
-      - .env.development
+      - examples/api-server/.env.development
 
 networks:
   default:

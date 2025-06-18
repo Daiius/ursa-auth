@@ -3,10 +3,12 @@ import { Hono } from 'hono'
 import { logger } from 'hono/logger'
 
 import { Auth } from '@auth/core'
+import { decode } from '@auth/core/jwt'
+import type { JWT } from '@auth/core/jwt'
 import { authConfig } from './auth'
 
 import { log } from './log'
-import { config } from '../.ursa-auth.config'
+import { config } from './config'
 
 
 const app = new Hono()
@@ -37,7 +39,8 @@ app.get('/mobile', async c => {
   return c.redirect(callbackUrl)
 })
 
-// authConfigのbasePathと合わせる必要がありそう
+// OAuth認証関連のエンドポイント
+// NOTE: authConfigのbasePathと合わせる必要がありそう
 app.all('/api/auth/*', async c => {
   const { req } = c
   const url = new URL(req.url)
@@ -81,6 +84,62 @@ app.all('/api/auth/*', async c => {
   }
 
   return response;
+})
+
+const getBearerToken = (
+  authorizationHeaderContent: string | undefined
+): string | undefined  => {
+  const authHeader = authorizationHeaderContent?.split(' ')
+  if (authHeader?.length !== 2 || authHeader[0] !== 'Bearer') {
+    log('inavlid authorization header: ', authorizationHeaderContent)
+    return undefined
+  }
+  return authHeader[1].trim()
+}
+
+const decodeJWE = async (token: string): Promise<JWT|null> => {
+  try {
+    const jwt = await decode({ 
+      token, 
+      secret: config.authSecrets, 
+      salt: 'authjs.session-token' 
+    });
+    return jwt
+  } catch (err) {
+    console.error(err)
+    log('exception occurred while decoding jwe, %o', err)
+    return null
+  }
+}
+
+// UrsaAuthのBearer tokenを解析し、
+// ユーザの情報を取得します
+app.get('/me', async c => {
+  const jwe = getBearerToken(c.req.header('Authorization'))
+  if (!jwe) {
+    log('failed to get bearer token')
+    return c.text('Unauthorized', 401)
+  }
+  const jwt = await decodeJWE(jwe)
+  if (!jwt) {
+    log('faild to decode JWE')
+    return c.text('Unauthorized', 401)
+  }
+  return c.json(jwt)
+})
+
+app.get('/validate', async c => {
+  const jwe = getBearerToken(c.req.header('Authorization'))
+  if (!jwe) {
+    log('failed to get bearer token')
+    return c.text('Unauthorized', 401)
+  }
+  const jwt = await decodeJWE(jwe)
+  if (!jwt) {
+    log('faild to decode JWE')
+    return c.text('Unauthorized', 401)
+  }
+  return c.body(null, 204) 
 })
 
 serve({

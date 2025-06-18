@@ -1,4 +1,8 @@
+
+import { NextResponse } from 'next/server'
+
 import { cookies } from 'next/headers'
+import { log } from '@/lib/log'
 
 export const GET = async () => {
   const cookieStore = await cookies()
@@ -8,12 +12,19 @@ export const GET = async () => {
     return new Response('Unauthorized', { status: 401 })
   }
 
-  return await fetch(
+  const response = await fetch(
     'http://ursa-auth-test-api:5000/hello-ursa-auth', {
       headers: {
-        Authorization: `bearer ${token}`
+        Authorization: `Bearer ${token}`
       }
     }
   );
+  if (!response.ok) {
+    log('failed to fetch from api server: ', response.statusText, response.status)
+    return NextResponse.json('Internal server error', { status: 500 })
+  }
+  const responseBody = await response.json()
+  log('response body: %o', responseBody)
+  return NextResponse.json(responseBody)
 }
 
