@@ -19,7 +19,7 @@ type CodeEntry = {
   codeChallenge: string;
 }
 const codeStore = new Map<string, CodeEntry>()
-const CODE_TTL = 5 * 60 * 1000
+const CODE_TTL = 5 * 60 * 1000 // 5分
 
 // PKCE用コード生成
 const generateCode = (jwe: string, codeChallenge: string): string => {
@@ -52,15 +52,10 @@ const consumeCode = (code: string, codeVerifier: string): string | null => {
   return entry.jwe
 }
 
-const authjsSessionSignature = 'authjs.session-token='
-
-
 const app = new Hono()
 
 app.use('*', cors({
-  origin: [
-    'http://localhost:3000',
-  ],
+  origin: config.cors?.origins || config.allowedRedirectPatterns,
   credentials: true,
 }))
 
@@ -124,9 +119,9 @@ app.all('/api/auth/*', async c => {
   const location = response.headers.get('Location');
   // JWEトークンが発行されたかチェック
   const jwe = response.headers.getSetCookie()
-    .find(cookie => cookie.startsWith(authjsSessionSignature))
+    .find(cookie => cookie.startsWith(config.authjsSessionName))
     ?.split(';')[0]
-    ?.replace(authjsSessionSignature, '') ?? ''
+    ?.replace(`${config.authjsSessionName}=`, '') ?? ''
   
   // 認証成功時にjweをメモリに保存、codeChallengeと紐づけcode発行
   // set-cookieからセッション情報を削除
@@ -151,7 +146,7 @@ app.all('/api/auth/*', async c => {
     // 特定のset-cookieだけ消す方法がなさそうなので、
     // 全部取得してフィルタしてセットしなおす
     const filteredCookies = response.headers.getSetCookie()
-      .filter(cookie => !cookie.startsWith('authjs.session-token='))
+      .filter(cookie => !cookie.startsWith(config.authjsSessionName))
     response.headers.delete('Set-Cookie')
     for (const cookie of filteredCookies) {
       response.headers.append('Set-Cookie', cookie)
@@ -176,8 +171,8 @@ const decodeJWE = async (token: string): Promise<JWT|null> => {
   try {
     const jwt = await decode({ 
       token, 
-      secret: config.authSecrets, 
-      salt: 'authjs.session-token' 
+      secret: config.authjsSecrets, 
+      salt: config.authjsSessionName, 
     });
     return jwt
   } catch (err) {

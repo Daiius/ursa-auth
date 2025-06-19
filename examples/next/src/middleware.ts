@@ -7,10 +7,6 @@ import {
   generateCodeChallenge,
 } from '@/lib/pkce'
 
-const ursaAuthUrl = process.env.URSA_AUTH_URL!
-const ursaAuthSessionName = 'ursa-auth.session'
-const ursaAuthPkceName = 'ursa-auth.pkce'
-
 // 基本全部のルートについて認証データを取得するが、
 // 特に厳密（認証情報無ければ即401）なルートを定義してみる
 const strictAuthCheckPaths = [
@@ -27,12 +23,18 @@ export const config: MiddlewareConfig = {
 
 export async function middleware(req: NextRequest) {
 
+  const sessionName = process.env.NEXT_PUBLIC_URSA_AUTH_SESSION_NAME!
+  const ursaAuthUrl = process.env.NEXT_PUBLIC_URSA_AUTH_URL!
+  const ursaAuthPkceName = process.env.NEXT_PUBLIC_URSA_AUTH_PKCE_NAME!
+
+  const publicHostUrl = process.env.NEXT_PUBLIC_HOST_URL
+
   // check cookie
-  const sessionCookie = req.cookies.get(ursaAuthSessionName)
+  const sessionCookie = req.cookies.get(sessionName)
   if (sessionCookie) {
     // セッション情報がある場合、チェックする
     const jwe = sessionCookie.value.split(';')[0]
-      .replace(`${ursaAuthSessionName}=`, '')
+      .replace(`${sessionName}=`, '')
     // if sessionToken is set, check it
     const ursaAuthResponse = await fetch(`${ursaAuthUrl}/validate`, {
       headers: { 'Authorization': `Bearer ${jwe}` }
@@ -54,7 +56,7 @@ export async function middleware(req: NextRequest) {
 
         // MAKE SURE NOT TO PASS CODE_VERIFIER TO URL!!!
         return NextResponse.redirect(
-        `http://localhost:4000/api/auth/signin?callbackUrl=http://localhost:3000/ursa-auth?codeChallenge=${codeChallenge}`
+        `${ursaAuthUrl}/api/auth/signin?callbackUrl=${publicHostUrl}/ursa-auth?codeChallenge=${codeChallenge}`
       )
       } else {
         return NextResponse.next()
@@ -69,7 +71,7 @@ export async function middleware(req: NextRequest) {
 
       // MAKE SURE NOT TO PASS CODE_VERIFIER TO URL!!!
       return NextResponse.redirect(
-        `http://localhost:4000/api/auth/signin?callbackUrl=http://localhost:3000/ursa-auth?codeChallenge=${codeChallenge}`
+        `${ursaAuthUrl}/api/auth/signin?callbackUrl=${publicHostUrl}/ursa-auth?codeChallenge=${codeChallenge}`
       )
     } else {
       return NextResponse.next()

@@ -8,7 +8,10 @@ import { config } from './config'
 
 export const authConfig: AuthConfig = {
   basePath: '/api/auth',
-  secret: config.authSecrets, // Auth.jsでセッション管理しないのでいらない？
+  secret: config.authjsSecrets, // Auth.jsでセッション管理しないのでいらない？
+  cookies: {
+    sessionToken: { name: config.authjsSessionName }
+  },
   providers: [
     GitHub(config.providers.github!),
   ],
