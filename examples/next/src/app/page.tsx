@@ -1,4 +1,6 @@
 import { GithubSignInButton } from '@/components/GithubSignInButton'
+import { SignInButton } from '@/components/SignInButton'
+import { SignOutButton } from '@/components/SignOutButton'
 
 import { fetchUserInfo } from '@/lib/ursa-auth'
 
@@ -12,14 +14,10 @@ export default async function Home() {
         {ursaAuthUser &&
           <>
             <pre>{JSON.stringify(ursaAuthUser, undefined, 2)}</pre>
-            <a href='http://localhost:4000/api/auth/signout?callbackUrl=http://localhost:3000'>
-              Sign out
-            </a>
+            <SignOutButton />
           </>
         }
-        <a href='http://localhost:4000/api/auth/signin?callbackUrl=http://localhost:3000'>
-          Test UrsaAuth Github Authentication
-        </a>
+        <SignInButton />
         <GithubSignInButton />
       </main>
     </div>

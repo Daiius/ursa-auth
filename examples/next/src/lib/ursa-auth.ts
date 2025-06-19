@@ -2,7 +2,7 @@ import { cookies } from 'next/headers'
 
 import { log } from '@/lib/log'
 
-const sessionTokenName = 'authjs.session-token';
+const sessionTokenName = 'ursa-auth.session';
 const ursaAuthUrl = process.env.URSA_AUTH_URL!;
 
 /**
