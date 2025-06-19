@@ -114,6 +114,7 @@ const decodeJWE = async (token: string): Promise<JWT|null> => {
 
 // UrsaAuthのBearer tokenを解析し、
 // ユーザの情報を取得します
+// NOTE: /api/auth/sessionと同等の機能です
 app.get('/me', async c => {
   const jwe = getBearerToken(c.req.header('Authorization'))
   if (!jwe) {
@@ -128,6 +129,9 @@ app.get('/me', async c => {
   return c.json(jwt)
 })
 
+// UrsaAuthのBearer tokenを解析し、
+// ユーザの情報を検証します
+// /me と異なり結果を返しません
 app.get('/validate', async c => {
   const jwe = getBearerToken(c.req.header('Authorization'))
   if (!jwe) {
