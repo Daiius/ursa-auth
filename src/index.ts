@@ -1,6 +1,9 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
+import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
+
+import { randomBytes, createHash } from 'crypto'
 
 import { Auth } from '@auth/core'
 import { decode } from '@auth/core/jwt'
@@ -10,15 +13,56 @@ import { authConfig } from './auth'
 import { log } from './log'
 import { config } from './config'
 
+type CodeEntry = {
+  jwe: string;
+  expiresAt: number;
+  codeChallenge: string;
+}
+const codeStore = new Map<string, CodeEntry>()
+const CODE_TTL = 5 * 60 * 1000
+
+// PKCE用コード生成
+const generateCode = (jwe: string, codeChallenge: string): string => {
+  const code = randomBytes(32).toString('hex')
+  const expiresAt = Date.now() + CODE_TTL
+  codeStore.set(code, { jwe, expiresAt, codeChallenge })
+  setTimeout(() => codeStore.delete(code), CODE_TTL * 1000)
+  return code
+}
+
+// PKCE用コード消費
+const consumeCode = (code: string, codeVerifier: string): string | null => {
+  const entry = codeStore.get(code)
+  if (!entry || Date.now() > entry.expiresAt) {
+    log('accessed expired code, deleting...: ', code)
+    codeStore.delete(code)
+    return null
+  }
+  // PKCE検証
+  const hash = createHash('sha256').update(codeVerifier).digest()
+  const expected = hash.toString('base64')
+    .replace(/=/g,'').replace(/\+/g, '-').replace(/\//g, '_')
+  if (expected !== entry.codeChallenge) {
+    log('pkce verification failed, deleting: ', code)
+    codeStore.delete(code)
+    return null
+  }
+  // successful
+  codeStore.delete(code)
+  return entry.jwe
+}
+
+const authjsSessionSignature = 'authjs.session-token='
+
 
 const app = new Hono()
 
-const tokenRedirectPatterns = [
-  `${config.host}/mobile`,
-];
-
-const isTokenRedirectLocation = (location: string) =>
-tokenRedirectPatterns.some(pattern => location.startsWith(pattern))
+app.use('*', cors({
+  origin: [
+    'http://localhost:3000',
+  ],
+  credentials: true,
+}))
 
 app.use('*', logger())
 
@@ -26,36 +70,49 @@ app.get('/', (c) => {
   return c.text('Hello Hono!')
 })
 
-app.get('/mobile', async c => {
-  const callbackUrl = (new URL(c.req.url)).searchParams.get('callbackUrl')
-  if (!callbackUrl) {
-    log('callbackUrl is not set')
-    return c.body('Invalid request', 400)
-  }
-  if (!config.allowedMobileRedirectPatterns.some(url => callbackUrl.startsWith(url))) {
-    log('callbackUrl for mobile is not allowed')
-    return c.body('Invalid request', 400)
-  }
-  return c.redirect(callbackUrl)
-})
-
 // OAuth認証関連のエンドポイント
-// NOTE: authConfigのbasePathと合わせる必要がありそう
+// NOTE: authConfigのbasePathと合わせます
+//
+// Auth.js のOAuth Providerとのコールバック処理に追加の処理を行い、
+// 簡易的な認証サーバとしての働きをさせています
+//
+// ?? 
+// 認証対象のクライアントと直接やり取りできるのは最初のアクセス時のみで、
+// あとはAuth.jsとOAuth Providerが勝手にやり取りしてしまう
+//
+// 最初にPKCE verification codeを貰ったところで、
+// JWEを貰えるのは何度か後に再度このエンドポイントが呼ばれた時なので
+// どうやってJWE取得時に設定したいverification codeと
+// 最初に呼ばれた時のverification codeを突き合わせるのだろう？
 app.all('/api/auth/*', async c => {
   const { req } = c
   const url = new URL(req.url)
+ 
+  // 初回にユーザからアクセスされたタイミングで
+  // 各種パラメータのチェックをする
+  // (あとはOAuth Providerもここを呼び出すため、次のリクエストではチェック不可) 
+    // アプリケーションから指定された最終リダイレクト先は
+    // 自作のアプリのみ許容する
+    // また、code_challengeパラメータを設定されていることを要求する
+    // (JWEをcodeを用いて受け渡しする際のPKCE用)
+    const initialCallbackUrl = url.searchParams.get('callbackUrl');
+    if (initialCallbackUrl) {
+      if (
+        !config.allowedRedirectPatterns
+          .some(url => initialCallbackUrl.startsWith(url))
+      ) {
+        log(`callbackUrl ${initialCallbackUrl} is not allowed (/api/auth/* handler)`)
+        return c.text('Invalid request', 400)
+      }
+      // code_challengeのチェック
+      const initialCodeChallenge = (new URL(initialCallbackUrl)).searchParams.get('codeChallenge')
+      if (req.path.includes('signin') &&  !initialCodeChallenge) {
+        log('codeChallenge parameter is not set in callbackUrl')
+        return c.text('Invalid request', 400)
+      }
+    }
   
-  // アプリケーションから指定された最終リダイレクト先は
-  // 自作のアプリのみ許容する
-  const callbackUrl = url.searchParams.get('callbackUrl');
-  if (
-    callbackUrl && 
-    !config.allowedRedirectPatterns.some(url => callbackUrl?.startsWith(url))
-  ) {
-    log(`callbackUrl ${callbackUrl} is not allowed (/api/auth/* handler)`)
-    return c.body('Invalid request', 400)
-  }
-  
+  // call Auth.js core function
   const response = await Auth(req.raw, authConfig)
 
   // プロバイダを指定してsignIn() を呼ぶ際には
@@ -63,24 +120,42 @@ app.all('/api/auth/*', async c => {
   // この処理は自作ログインページで使用する
   //const response = await Auth(req.raw, { ...authConfig, skipCSRFCheck })
   
-  // リダイレクト先の検証
+  // リダイレクト先の検証用
   const location = response.headers.get('Location');
+  // JWEトークンが発行されたかチェック
+  const jwe = response.headers.getSetCookie()
+    .find(cookie => cookie.startsWith(authjsSessionSignature))
+    ?.split(';')[0]
+    ?.replace(authjsSessionSignature, '') ?? ''
   
-  // おそらく認証成功後に戻されるタイミングは検出可能なはず...
+  // 認証成功時にjweをメモリに保存、codeChallengeと紐づけcode発行
+  // set-cookieからセッション情報を削除
   if (
     response.status === 302 &&
-    isTokenRedirectLocation(location ?? '') &&
-    url.pathname.startsWith('/api/auth/callback/')
+    url.pathname.startsWith('/api/auth/callback/') &&
+    jwe &&
+    location
   ) {
-    log('detected mobile authentication, modifying redirect URL param...')
-    const authjsSessionSignature = 'authjs.session-token='
-    const jwe = response.headers.getSetCookie()
-      .find(cookie => cookie.startsWith(authjsSessionSignature))
-      ?.split(';')[0]
-      ?.replace(authjsSessionSignature, '') ?? ''
-    const locationUrl = new URL(response.headers.get('Location')!)
-    locationUrl.searchParams.set('token', jwe)
-    response.headers.set('Location', locationUrl.toString())
+    // callbackUrlがlocationにセットされているので、
+    // codeChallengeを記録して削除し、代わりにcodeをセットする
+    const url = new URL(location)
+    const codeChallenge = url.searchParams.get('codeChallenge')
+    if (!codeChallenge) {
+      log('cannot find codeChallenge parameter in redirect location')
+      return c.text('Internal server error', 500)
+    }
+    url.searchParams.delete('codeChallenge')
+    url.searchParams.set('code', generateCode(jwe, codeChallenge))
+    response.headers.set('Location', url.toString())
+
+    // 特定のset-cookieだけ消す方法がなさそうなので、
+    // 全部取得してフィルタしてセットしなおす
+    const filteredCookies = response.headers.getSetCookie()
+      .filter(cookie => !cookie.startsWith('authjs.session-token='))
+    response.headers.delete('Set-Cookie')
+    for (const cookie of filteredCookies) {
+      response.headers.append('Set-Cookie', cookie)
+    }
   }
 
   return response;
@@ -144,6 +219,14 @@ app.get('/validate', async c => {
     return c.text('Unauthorized', 401)
   }
   return c.body(null, 204) 
+})
+
+// UrsaAuthのJWEトークンを取得します
+app.post('/token', async c => {
+  const { code, code_verifier } = await c.req.json()
+  const jwe = consumeCode(code, code_verifier)
+  if (!jwe) return c.text('Invalid request', 400)
+  return c.text(jwe)
 })
 
 serve({
