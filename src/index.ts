@@ -26,7 +26,7 @@ const generateCode = (jwe: string, codeChallenge: string): string => {
   const code = randomBytes(32).toString('hex')
   const expiresAt = Date.now() + CODE_TTL
   codeStore.set(code, { jwe, expiresAt, codeChallenge })
-  setTimeout(() => codeStore.delete(code), CODE_TTL * 1000)
+  setTimeout(() => codeStore.delete(code), CODE_TTL)
   return code
 }
 
