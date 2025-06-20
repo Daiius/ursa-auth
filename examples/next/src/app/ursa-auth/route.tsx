@@ -5,14 +5,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import { log } from '@/lib/log'
 
 export const GET = async (req: NextRequest) =>  {
+
+  const hostUrl = process.env.NEXT_PUBLIC_HOST_URL!;
+
   const code = req.nextUrl.searchParams.get('code')
   if (!code) {
     // TODO what should we do if code is undefined?
-    return NextResponse.redirect('/?error=AuthenticationError')
+    log('code not found')
+    return NextResponse.redirect(`${hostUrl}/?error=AuthenticationError`)
   }
   const codeVerifier = req.cookies.get(process.env.NEXT_PUBLIC_URSA_AUTH_PKCE_NAME!)?.value
   if (!codeVerifier) {
-    return NextResponse.redirect('/?error=AuthenticationError')
+    log('code_verifier not found')
+    return NextResponse.redirect(`${hostUrl}/?error=AuthenticationError`)
   }
   const res = await fetch(`${process.env.NEXT_PUBLIC_URSA_AUTH_URL!}/token`, {
     method: 'POST',
@@ -27,17 +32,20 @@ export const GET = async (req: NextRequest) =>  {
   }
   const jwe = await res.text()
   if (!jwe) {
-    return NextResponse.redirect('/?error=AuthenticationError')
+    return NextResponse.redirect(`${hostUrl}/?error=AuthenticationError`)
   }
 
-  const response = NextResponse.redirect('/')
+  const response = NextResponse.redirect(`${hostUrl}`)
   response.cookies.set(
     process.env.NEXT_PUBLIC_URSA_AUTH_SESSION_NAME!,
     jwe, { 
+      // prohibit read from client side code
       httpOnly: true, 
       secure: process.env.NODE_ENV === 'production', 
-      sameSite: 'lax', 
-      path: '/'
+      path: '/',
+      // allow to send session cookie to UrsaAuth
+      sameSite: 'none', 
+      domain: process.env.NEXT_PUBLIC_URSA_AUTH_URL!,
     }
   )
   response.cookies.delete(process.env.NEXT_PUBLIC_URSA_AUTH_PKCE_NAME!)
