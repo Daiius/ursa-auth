@@ -7,8 +7,10 @@ export const SignOutButton = () => {
     document.cookie = 
       `${process.env.NEXT_PUBLIC_URSA_AUTH_SESSION_NAME}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`
     // サインアウト後に遷移したいページをcallbackUrlで指定します
+    const ursaAuthUrl = process.env.NEXT_PUBLIC_URSA_AUTH_URL!
+    const hostUrl = process.env.NEXT_PUBLIC_HOST_URL!
     window.location.href = 
-      `${process.env.NEXT_PUBLIC_URSA_AUTH_URL}/api/auth/signout?callbackUrl=http://localhost:3000`
+      `${ursaAuthUrl}/api/auth/signout?callbackUrl=${hostUrl}`
   }
   return (
     <button

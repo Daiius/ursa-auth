@@ -25,7 +25,7 @@ export const authConfig: AuthConfig = {
         !config.allowedRedirectPatterns
         .some(allowedUrl => url.startsWith(allowedUrl))
       ) {
-        log(`${url} is not allowed (Auth.js redirect callback)`)
+        log('url not allowed (Auth.js redirect callback): ', url)
         return baseUrl
       }
       return url;

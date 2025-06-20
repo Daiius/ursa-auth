@@ -14,13 +14,18 @@ export const fetchUserInfo = async (): Promise<any> => {
   if (!sessionToken) {
     return undefined
   }
-  const response = await fetch(`${ursaAuthUrl}/me`, {
-    headers: { 'Authorization': `Bearer ${sessionToken}` }
-  })
-  if (!response.ok) {
-    log('failed to fetch ursa-auth/me, ', response.statusText, response.status)
+  try {
+    const response = await fetch(`${ursaAuthUrl}/me`, {
+      headers: { 'Authorization': `Bearer ${sessionToken}` }
+    })
+    if (!response.ok) {
+      log('failed to fetch ursa-auth/me, ', response.statusText, response.status)
+      return undefined
+    }
+    return await response.json()
+  } catch (err) {
+    log('fetch errr: %o', err)
     return undefined
   }
-  return await response.json()
 }
 

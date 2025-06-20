@@ -54,8 +54,15 @@ const consumeCode = (code: string, codeVerifier: string): string | null => {
 
 const app = new Hono()
 
+const origins = config.cors?.origins != null
+  ? config.cors?.origins.length === 0 
+    ? config.allowedRedirectPatterns
+    : config.cors?.origins
+  : config.allowedRedirectPatterns
+
+log('cors origins: %o', origins)
 app.use('*', cors({
-  origin: config.cors?.origins || config.allowedRedirectPatterns,
+  origin: origins,
   credentials: true,
 }))
 
@@ -96,7 +103,7 @@ app.all('/api/auth/*', async c => {
         !config.allowedRedirectPatterns
           .some(url => initialCallbackUrl.startsWith(url))
       ) {
-        log(`callbackUrl ${initialCallbackUrl} is not allowed (/api/auth/* handler)`)
+        log('callbackUrl value is not allowed (/api/auth/* handler)', initialCallbackUrl)
         return c.text('Invalid request', 400)
       }
       // code_challengeのチェック
@@ -151,6 +158,7 @@ app.all('/api/auth/*', async c => {
     for (const cookie of filteredCookies) {
       response.headers.append('Set-Cookie', cookie)
     }
+    log('last response: %o', response)
   }
 
   return response;

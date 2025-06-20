@@ -20,8 +20,10 @@ export const SignInButton = () => {
 
     // callbackUrlにursa-authから返されるcodeを受け取るURLを指定し、
     // codeChallengeを追加しておきます
+    const ursaAuthUrl = process.env.NEXT_PUBLIC_URSA_AUTH_URL!
+    const hostUrl = process.env.NEXT_PUBLIC_HOST_URL!
     window.location.href = 
-      `${process.env.NEXT_PUBLIC_URSA_AUTH_URL}/api/auth/signin?callbackUrl=http://localhost:3000/ursa-auth?codeChallenge=${codeChallenge}`
+      `${ursaAuthUrl}/api/auth/signin?callbackUrl=${hostUrl}/ursa-auth?codeChallenge=${codeChallenge}`
   }
 
   return (
