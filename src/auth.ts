@@ -8,7 +8,10 @@ import { config } from './config'
 
 export const authConfig: AuthConfig = {
   basePath: '/api/auth',
-  secret: config.authSecrets, // Auth.jsでセッション管理しないのでいらない？
+  secret: config.authjsSecrets, // Auth.jsでセッション管理しないのでいらない？
+  cookies: {
+    sessionToken: { name: config.authjsSessionName }
+  },
   providers: [
     GitHub(config.providers.github!),
   ],
@@ -22,7 +25,7 @@ export const authConfig: AuthConfig = {
         !config.allowedRedirectPatterns
         .some(allowedUrl => url.startsWith(allowedUrl))
       ) {
-        log(`${url} is not allowed (Auth.js redirect callback)`)
+        log('url not allowed (Auth.js redirect callback): ', url)
         return baseUrl
       }
       return url;

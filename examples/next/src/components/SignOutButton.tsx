@@ -1,13 +1,16 @@
 'use client'
 
-
-const ursaAuthUrl = 'http://localhost:4000'
-const ursaAuthSessionName = 'ursa-auth.session'
-
 export const SignOutButton = () => {
   const signOutHandler = async () => {
-    document.cookie = `${ursaAuthSessionName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`
-    window.location.href = `${ursaAuthUrl}/api/auth/signout?callbackUrl=http://localhost:3000`
+    // サインアウト時にセッション情報が記録されたcookieを削除します
+    // 有効期限切れの値をセットするのが常套手段らしいです
+    document.cookie = 
+      `${process.env.NEXT_PUBLIC_URSA_AUTH_SESSION_NAME}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`
+    // サインアウト後に遷移したいページをcallbackUrlで指定します
+    const ursaAuthUrl = process.env.NEXT_PUBLIC_URSA_AUTH_URL!
+    const hostUrl = process.env.NEXT_PUBLIC_HOST_URL!
+    window.location.href = 
+      `${ursaAuthUrl}/api/auth/signout?callbackUrl=${hostUrl}`
   }
   return (
     <button
@@ -17,3 +20,4 @@ export const SignOutButton = () => {
     </button>
   ) 
 }
+

@@ -8,18 +8,14 @@ import { useEffect } from 'react'
 
 import { log } from '@/lib/log'
 
-const ursaAuthPkceName = 'ursa-auth.pkce'
-const ursaAuthSessionName = 'ursa-auth.session'
-const ursaAuthUrl = 'http://localhost:4000'
-
 export const UrsaAuthPage = () => {
   const params = useSearchParams()
   const router = useRouter()
 
   useEffect(() => {
     const code = params.get('code')
-    const codeVerifier = sessionStorage.getItem(ursaAuthPkceName)
-    fetch(`${ursaAuthUrl}/token`, {
+    const codeVerifier = sessionStorage.getItem(process.env.NEXT_PUBLIC_URSA_AUTH_PKCE_NAME!)
+    fetch(`${process.env.NEXT_PUBLIC_URSA_AUTH_URL!}/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -37,8 +33,8 @@ export const UrsaAuthPage = () => {
     .then(jwe => {
       if (jwe) {
         document.cookie = 
-          `${ursaAuthSessionName}=${jwe}; path=/; secure; samesite=lax`
-        sessionStorage.removeItem(ursaAuthPkceName)
+          `${process.env.NEXT_PUBLIC_URSA_AUTH_SESSION_NAME!}=${jwe}; path=/; secure; samesite=lax`
+        sessionStorage.removeItem(process.env.NEXT_PUBLIC_URSA_AUTH_PKCE_NAME!)
       }
       router.replace('/')
     })
