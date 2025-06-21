@@ -1,5 +1,5 @@
 # UrsaAuth
-![UrsaAuth icon](./icons/ursa-auth-icon.svg)
+![UrsaAuth icon](./icons/ursa-auth-icon-color.png)
 
 UrsaAuth is an authentication server for Web/Mobile Login and API server protection.
 
@@ -13,12 +13,6 @@ you can test UrsaAuth by running 3 servers in your local environemnt.
 - UrsaAuth server
 - Next.js server (UrsaAuth login)
 - API server (use UrsaAuth protection)
-
-## install packages
-run `pnpm install` in 3 locations
-- repository root
-- examples/next
-- examples/api-server
 
 ## docker compose
 you can start these servers by docker compose command.
