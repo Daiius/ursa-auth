@@ -1,12 +1,11 @@
-// UrsaAuthからのリダイレクトを受け取る部分
-
+// UrsaAuthからのsign in後リダイレクトを受け取る
 
 import { NextRequest, NextResponse } from 'next/server'
 import { log } from '@/lib/log'
 
 export const GET = async (req: NextRequest) =>  {
 
-  const hostUrl = process.env.NEXT_PUBLIC_HOST_URL!;
+  const hostUrl = process.env.HOST_URL!;
 
   const code = req.nextUrl.searchParams.get('code')
   if (!code) {
@@ -19,7 +18,7 @@ export const GET = async (req: NextRequest) =>  {
     log('code_verifier not found')
     return NextResponse.redirect(`${hostUrl}/?error=AuthenticationError`)
   }
-  const res = await fetch(`${process.env.NEXT_PUBLIC_URSA_AUTH_URL!}/token`, {
+  const res = await fetch(`${process.env.URSA_AUTH_URL!}/token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -37,15 +36,14 @@ export const GET = async (req: NextRequest) =>  {
 
   const response = NextResponse.redirect(`${hostUrl}`)
   response.cookies.set(
-    process.env.NEXT_PUBLIC_URSA_AUTH_SESSION_NAME!,
+    process.env.URSA_AUTH_SESSION_NAME!,
     jwe, { 
       // prohibit read from client side code
       httpOnly: true, 
       secure: process.env.NODE_ENV === 'production', 
       path: '/',
-      // allow to send session cookie to UrsaAuth
-      sameSite: 'none', 
-      domain: process.env.NEXT_PUBLIC_URSA_AUTH_URL!,
+      sameSite: 'lax', 
+      maxAge: 60 * 60 * 34 * 30,
     }
   )
   response.cookies.delete(process.env.NEXT_PUBLIC_URSA_AUTH_PKCE_NAME!)

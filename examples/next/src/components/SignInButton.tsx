@@ -15,7 +15,6 @@ export const SignInButton = () => {
     
   const handleSignin = async () => {
     const codeVerifier = generateCodeVerifier()
-    //sessionStorage.setItem(process.env.NEXT_PUBLIC_URSA_AUTH_PKCE_NAME!, codeVerifier)
     document.cookie = 
       `${process.env.NEXT_PUBLIC_URSA_AUTH_PKCE_NAME}=${codeVerifier}; Max-Age=300; SameSite=Lax; Path=/`
     const codeChallenge = await generateCodeChallenge(codeVerifier)
@@ -25,7 +24,7 @@ export const SignInButton = () => {
     const ursaAuthUrl = process.env.NEXT_PUBLIC_URSA_AUTH_URL!
     const hostUrl = process.env.NEXT_PUBLIC_HOST_URL!
     window.location.href = 
-      `${ursaAuthUrl}/api/auth/signin?callbackUrl=${hostUrl}/ursa-auth?codeChallenge=${codeChallenge}`
+      `${ursaAuthUrl}/api/auth/signin?callbackUrl=${hostUrl}/ursa-auth/signin?codeChallenge=${codeChallenge}`
   }
 
   return (
