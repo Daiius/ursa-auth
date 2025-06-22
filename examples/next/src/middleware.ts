@@ -23,8 +23,8 @@ export const config: MiddlewareConfig = {
 
 export async function middleware(req: NextRequest) {
 
-  const sessionName = process.env.NEXT_PUBLIC_URSA_AUTH_SESSION_NAME!
-  const ursaAuthUrl = process.env.NEXT_PUBLIC_URSA_AUTH_URL!
+  const sessionName = process.env.URSA_AUTH_SESSION_NAME!
+  const ursaAuthUrl = process.env.URSA_AUTH_URL!
   const ursaAuthPkceName = process.env.NEXT_PUBLIC_URSA_AUTH_PKCE_NAME!
 
   const publicHostUrl = process.env.NEXT_PUBLIC_HOST_URL!
