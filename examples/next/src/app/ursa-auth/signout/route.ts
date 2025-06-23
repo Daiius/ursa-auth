@@ -3,12 +3,14 @@
 import { NextResponse } from 'next/server'
 import { log } from '@/lib/log'
 
+import { ursaAuthServerSideConfig } from '@/ursa-auth/server-side-config'
+
 export const GET = async () => {
   log('signing out...')
-  const hostUrl = process.env.HOST_URL!
+  const { hostUrl, sessionName } = ursaAuthServerSideConfig
   const response = NextResponse.redirect(`${hostUrl}`)
   response.cookies.set(
-    process.env.URSA_AUTH_SESSION_NAME!,
+    sessionName,
     '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

@@ -3,9 +3,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { log } from '@/lib/log'
 
+import { ursaAuthServerSideConfig } from '@/ursa-auth/server-side-config';
+
 export const GET = async (req: NextRequest) =>  {
 
-  const hostUrl = process.env.HOST_URL!;
+  const { 
+    hostUrl,
+    pkceName,
+    authServerUrl, 
+    sessionName,
+  } = ursaAuthServerSideConfig
 
   const code = req.nextUrl.searchParams.get('code')
   if (!code) {
@@ -13,12 +20,12 @@ export const GET = async (req: NextRequest) =>  {
     log('code not found')
     return NextResponse.redirect(`${hostUrl}/?error=AuthenticationError`)
   }
-  const codeVerifier = req.cookies.get(process.env.NEXT_PUBLIC_URSA_AUTH_PKCE_NAME!)?.value
+  const codeVerifier = req.cookies.get(pkceName)?.value
   if (!codeVerifier) {
     log('code_verifier not found')
     return NextResponse.redirect(`${hostUrl}/?error=AuthenticationError`)
   }
-  const res = await fetch(`${process.env.URSA_AUTH_URL!}/token`, {
+  const res = await fetch(`${authServerUrl}/token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -36,7 +43,7 @@ export const GET = async (req: NextRequest) =>  {
 
   const response = NextResponse.redirect(`${hostUrl}`)
   response.cookies.set(
-    process.env.URSA_AUTH_SESSION_NAME!,
+    sessionName,
     jwe, { 
       // prohibit read from client side code
       httpOnly: true, 
@@ -46,7 +53,7 @@ export const GET = async (req: NextRequest) =>  {
       maxAge: 60 * 60 * 34 * 30,
     }
   )
-  response.cookies.delete(process.env.NEXT_PUBLIC_URSA_AUTH_PKCE_NAME!)
+  response.cookies.delete(pkceName)
 
   return response;
 }
