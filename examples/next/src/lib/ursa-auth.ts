@@ -2,20 +2,22 @@ import { cookies } from 'next/headers'
 
 import { log } from '@/lib/log'
 
-const sessionTokenName = 'ursa-auth.session';
-const ursaAuthUrl = process.env.URSA_AUTH_URL!;
+import { ursaAuthServerSideConfig } from '@/ursa-auth/server-side-config'
 
 /**
  * cookiesからUrsaAuthのユーザ情報を取得します
  */
 export const fetchUserInfo = async (): Promise<any> => {
-  const sessionToken = (await cookies()).get(sessionTokenName)?.value
-    .split(';')?.[0].replace(sessionTokenName + '=', '')
+
+  const { sessionName, authServerUrl } = ursaAuthServerSideConfig
+
+  const sessionToken = (await cookies()).get(sessionName)?.value
+    .split(';')?.[0].replace(sessionName + '=', '')
   if (!sessionToken) {
     return undefined
   }
   try {
-    const response = await fetch(`${ursaAuthUrl}/me`, {
+    const response = await fetch(`${authServerUrl}/me`, {
       headers: { 'Authorization': `Bearer ${sessionToken}` }
     })
     if (!response.ok) {

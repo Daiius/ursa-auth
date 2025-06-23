@@ -2,10 +2,8 @@ import { NextResponse } from 'next/server'
 import type { NextRequest, MiddlewareConfig } from 'next/server'
 
 import { log } from '@/lib/log'
-import { 
-  generateCodeVerifier,
-  generateCodeChallenge,
-} from '@/lib/pkce'
+
+import { ursaAuthServerSideConfig } from '@/ursa-auth/server-side-config'
 
 // 基本全部のルートについて認証データを取得するが、
 // 特に厳密（認証情報無ければ即401）なルートを定義してみる
@@ -23,11 +21,11 @@ export const config: MiddlewareConfig = {
 
 export async function middleware(req: NextRequest) {
 
-  const sessionName = process.env.URSA_AUTH_SESSION_NAME!
-  const ursaAuthUrl = process.env.URSA_AUTH_URL!
-  const ursaAuthPkceName = process.env.NEXT_PUBLIC_URSA_AUTH_PKCE_NAME!
-
-  const publicHostUrl = process.env.NEXT_PUBLIC_HOST_URL!
+  const { 
+    sessionName, 
+    authServerUrl,
+    hostUrl, 
+  } = ursaAuthServerSideConfig;
 
   // check cookie
   const sessionCookie = req.cookies.get(sessionName)
@@ -36,7 +34,7 @@ export async function middleware(req: NextRequest) {
     const jwe = sessionCookie.value.split(';')[0]
       .replace(`${sessionName}=`, '')
     // if sessionToken is set, check it
-    const validationUrl = `${ursaAuthUrl}/validate`
+    const validationUrl = `${authServerUrl}/validate`
     log('validation url: ', validationUrl)
     try {
       const ursaAuthResponse = await fetch(validationUrl, {
@@ -44,7 +42,7 @@ export async function middleware(req: NextRequest) {
       })
       if (!ursaAuthResponse.ok) {
         log(
-          `failed to fetch from ${ursaAuthUrl}/validate,`,
+          `failed to fetch from ${authServerUrl}/validate,`,
           `${ursaAuthResponse.statusText}, ${ursaAuthResponse.status}`
         )
         // TODO
@@ -52,15 +50,7 @@ export async function middleware(req: NextRequest) {
         // 状況に応じて単に401を返すより適切な応答があるはず
         // (リダイレクトするとか)
         if (strictAuthCheckPaths.includes(req.nextUrl.pathname)) {
-          // セッション情報が無い場合、ログインページにリダイレクトする
-          const codeVerifier = generateCodeVerifier()
-          sessionStorage.setItem(ursaAuthPkceName, codeVerifier)
-          const codeChallenge = await generateCodeChallenge(codeVerifier)
-
-          // MAKE SURE NOT TO PASS CODE_VERIFIER TO URL!!!
-          return NextResponse.redirect(
-          `${ursaAuthUrl}/api/auth/signin?callbackUrl=${publicHostUrl}/ursa-auth?codeChallenge=${codeChallenge}`
-        )
+          return NextResponse.redirect(`${hostUrl}`)
         } else {
           return NextResponse.next()
         }
@@ -71,15 +61,7 @@ export async function middleware(req: NextRequest) {
     }
   } else {
     if (strictAuthCheckPaths.includes(req.nextUrl.pathname)) {
-      // セッション情報が無い場合、ログインページにリダイレクトする
-      const codeVerifier = generateCodeVerifier()
-      sessionStorage.setItem(ursaAuthPkceName, codeVerifier)
-      const codeChallenge = await generateCodeChallenge(codeVerifier)
-
-      // MAKE SURE NOT TO PASS CODE_VERIFIER TO URL!!!
-      return NextResponse.redirect(
-        `${ursaAuthUrl}/api/auth/signin?callbackUrl=${publicHostUrl}/ursa-auth?codeChallenge=${codeChallenge}`
-      )
+      return NextResponse.redirect(`${hostUrl}`)
     } else {
       return NextResponse.next()
     }
