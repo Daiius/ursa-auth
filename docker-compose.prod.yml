@@ -1,0 +1,8 @@
+services:
+  ursa-auth:
+    build:
+      dockerfile: Dockerfile.ursa-auth.prod
+    container_name: ursa-auth
+    volumes: !override
+      - ./.ursa-auth.config.json:/app/.ursa-auth.config.json
+
