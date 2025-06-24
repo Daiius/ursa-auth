@@ -3,10 +3,6 @@
 
 UrsaAuth is an authentication server for Web/Mobile Login and API server protection.
 
-## config
-`.ursa-auth.config.json` is required for both client and server.
-
-see `ursa-auth.config.schema.ts` to define your config.
 
 # How to setup test environment
 you can test UrsaAuth by running 3 servers in your local environemnt.
@@ -14,13 +10,38 @@ you can test UrsaAuth by running 3 servers in your local environemnt.
 - Next.js server (UrsaAuth login)
 - API server (use UrsaAuth protection)
 
+## config
+- `.ursa-auth.config.json` and `.env.development` for UrsaAuth server:
+  - see `ursa-auth.config.schema.ts` for server config json structure
+  - `CONFIG_PATH=.ursa-auth.config.json` or specify your customized config path in `.env.development`
+- `.env.development` for example applications:
+  - Next.js application in `example/next` use these environment variables
+    - NEXT\_PUBLIC\_HOST\_URL: this Next.js application's URL
+    - NEXT\_PUBLIC\_URSA\_AUTH\_URL: UrsaAuth server's URL
+    - NEXT\_PUBLIC\_URSA\_AUTH\_PKCE\_NAME: temporal cookie name for UrsaAuth PKCE vode verifier
+    - AUTH\_SESSION\_NAME: session cookie name for UrsaAuth
+    >
+    > - Normally Next.js does not expose environment variables to client side codes.
+    >   it means, `process.env.YOUR_ENV_NAME` is `undefined` in client side codes
+    > - Exceptionally, Next.js exposes environment variables start with `NEXT_PUBLIC_` to client side codes
+    >   - dynamic way (`process.env['NEXT_PUBLIC_YOUR_ENV_VALUE']`) does not work. 
+    >     We need to write down full `process.env.NEXT_PUBLIC_YOUR_ENV_VALUE` in sources, and Next.js seems to do some replacements with your value.
+    >
+    > https://nextjs.org/docs/app/guides/environment-variables
+    >
+    > `AUTH_SESSION_NAME` is intended to use in server side, others in client & server side.
+    >
+  - API server in `example/api-server` use this environment varible
+    - URSA\_AUTH\_URL: UrsaAuth server's URL
+
+
+In `nginx.conf` and `docker-compose.yml` these values are hard coded, which you might need to edit:
+- NEXT\_PUBLIC\_HOST\_URL: `http://next.localhost`
+- NEXT\_PUBLIC\_URSA\_AUTH\_URL: `http://auth.localhost`
+
 ## docker compose
 you can start these servers by docker compose command.
 ```
 docker compose up
 ```
-
-- UrsaAuth server: auth.localhost
-- Next.js: next.localhost
-- API server: app.localhost
 
