@@ -7,7 +7,7 @@ services:
     build: 
       dockerfile: Dockerfile.ursa-auth
       context: .
-    container_name: ursa-auth
+    container_name: ursa-auth-dev
     env_file:
       - .env.development
     volumes:

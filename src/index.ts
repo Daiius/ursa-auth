@@ -232,10 +232,19 @@ app.post('/token', async c => {
   return c.text(jwe)
 })
 
-serve({
+
+const server = serve({
   fetch: app.fetch,
   port: 4000
 }, (info) => {
   console.log(`Server is running on http://localhost:${info.port}`)
+})
+
+process.on('SIGTERM',  () => {
+  log('received SIGTERM, closing connections...')
+  server.close(() => {
+    log('connection closed, terminating...')
+    process.exit(0)
+  })
 })
 
