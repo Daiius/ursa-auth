@@ -1,5 +1,4 @@
 
-// avoid broken vim syntax highlight...
 import type { AuthConfig } from '@auth/core'
 import GitHub from '@auth/core/providers/github'
 import { log } from './log'
@@ -28,6 +27,12 @@ export const authConfig: AuthConfig = {
         log('url not allowed (Auth.js redirect callback): ', url)
         return baseUrl
       }
+      // 強制https callbackオプションが有効なら置き換え
+      if (config.forceHttpsCallback && url.startsWith('http://')) {
+        const newUrl = url.replace('http://', 'https://')
+        log('forcing https callback: ', url, ' -> ', newUrl)
+        return newUrl
+      }
       return url;
     },
     async jwt({ token, profile }) {
@@ -38,7 +43,7 @@ export const authConfig: AuthConfig = {
   // Auth.js v5 では trustHost: true が前提らしい
   // ということは不正なHost値を受け付けない設定が必須
   trustHost: true,
-  debug: process.env.NODE_ENV === 'development',
+  debug: process.env.NODE_ENV === 'development' || !!process.env.AUTH_DEBUG,
 };
 
 
