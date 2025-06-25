@@ -5,7 +5,7 @@ import { config } from './config'
 import { log } from './log'
 
 import { generateCode } from './pkce'
-import { checkCustomParams, getJWEFromSetCookieHeader } from './lib';
+import { checkCustomParams, getCustomRedirectLocation, getJWEFromSetCookieHeader, isSuccessfulRedirectResponse } from './lib';
 
 /**
  * UrsaAuthの認証情報中継機能を、Auth.js のコア機能のミドルウェアとして
@@ -13,7 +13,9 @@ import { checkCustomParams, getJWEFromSetCookieHeader } from './lib';
  */
 export const ursaAuthMiddleware: MiddlewareHandler = async (c, next) => {
 
+  // for debug
   const url = new URL(c.req.url);
+  log('url: ', url)
 
   // 初回にユーザからアクセスされたタイミングで
   // 各種パラメータのチェックをする
@@ -34,62 +36,31 @@ export const ursaAuthMiddleware: MiddlewareHandler = async (c, next) => {
   // JWEトークンが発行されたかチェック+転送の準備
   const jwe = getJWEFromSetCookieHeader(c.res)
   
-  // UrsaAuth向けのcodeChallenge付きcallbackUrlが入っている
-  const location = c.res.headers.get('Location');
-  if (
-    c.res.status === 302 &&
-    url.pathname.startsWith('/api/auth/callback/') &&
-    jwe &&
-    location
-  ) {
-    let url = new URL(location)
-    log('calling back, location: ', location)
-    // Auth.js はカスタムスキーマコールバックに対応していないので、
-    // ダミーで設定されたurlであればcallbackUrlにまるまるおきかえる
-    if (location.startsWith(`${config.host}/mobile`)) {
-      const callbackUrlForMobile = url.searchParams.get('callbackUrl')
-      if (!callbackUrlForMobile) {
-        log(
-          'mobile callback pattern detected, but callbackUrl is not set: ',
-          callbackUrlForMobile
-        )
-        return c.text('Invalid request', 400)
-      }
-      if (!config.allowedMobileRedirectPatterns.includes(callbackUrlForMobile)) {
-        log(
-          'given mobile callback uri pattern is not allowed',
-          callbackUrlForMobile,
-        )
-        return c.text('Invalid request', 400)
-      }
-      const originalSearchParams = url.searchParams
-      url = new URL(callbackUrlForMobile)
-      if (url.searchParams.size) {
-        log(
-          'mobile callback should not have search parameters: ',
-          url,
-        )
-        return c.text('Invalid request', 400)
-      }
-      // add original searchParams to mobile callback url
-      for (const [key, value] of originalSearchParams) {
-        url.searchParams.set(key, value)
-      }
-      log('mobile callback pattern applied: ', url)
-    }
+  // UrsaAuth向けのcodeChallenge付きcallbackUrlが入っている場合
+  if (isSuccessfulRedirectResponse(c.req.raw, c.res, jwe)) {
 
-    log('url: ', url.toString())
+    const locationUrlString = c.res.headers.get('location')
+    if (!locationUrlString || !URL.parse(locationUrlString)) {
+      log('cannot find redirect location in header, or it is invalid')
+      return c.text('Invalid request', 400)
+    }
+    const locationUrl = getCustomRedirectLocation(new URL(locationUrlString))
+
+    if (!locationUrl || !jwe) {
+      log('cannot find callbackUrl or jwe: ', locationUrl?.toString(), jwe)
+      return c.text('Inavlid request', 400)
+    }
     
     // callbackUrlがlocationにセットされているので、
     // codeChallengeを記録して削除し、代わりにcodeをセットする
-    const codeChallenge = url.searchParams.get('codeChallenge')
+    const codeChallenge = locationUrl.searchParams.get('codeChallenge')
     if (!codeChallenge) {
       log('cannot find codeChallenge parameter in redirect location')
       return c.text('Internal server error', 500)
     }
-    url.searchParams.delete('codeChallenge')
-    url.searchParams.set('code', generateCode(jwe, codeChallenge))
-    c.res.headers.set('Location', url.toString())
+    locationUrl.searchParams.delete('codeChallenge')
+    locationUrl.searchParams.set('code', generateCode(jwe, codeChallenge))
+    c.res.headers.set('Location', locationUrl.toString())
 
     // 特定のset-cookieだけ消す方法がなさそうなので、
     // 全部取得してフィルタしてセットしなおす
