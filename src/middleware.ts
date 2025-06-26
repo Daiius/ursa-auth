@@ -5,7 +5,30 @@ import { config } from './config'
 import { log } from './log'
 
 import { generateCode } from './pkce'
-import { checkCustomParams, getCustomRedirectLocation, getJWEFromSetCookieHeader, isSuccessfulRedirectResponse } from './lib';
+import { 
+  checkCustomParams,
+  getCustomRedirectLocation,
+  getJWEFromSetCookieHeader,
+  isSuccessfulRedirectResponse, 
+} from './lib';
+
+/**
+ * x-forwarded-proto に従ってreq.urlを書き換えます
+ */
+export const trustProtoMiddleware: MiddlewareHandler = async (c, next) => {
+  const xForwardedProto = c.req.header('x-forwarded-proto')
+  if (xForwardedProto) {
+    const trustedUrl = c.req.url.replace('http://', `${xForwardedProto}://`)
+    const clonedReq = c.req.raw.clone()
+    const newReq = new Request(trustedUrl.toString(), {
+      method: clonedReq.method,
+      headers: clonedReq.headers,
+      body: ['GET', 'HEAD'].includes(clonedReq.method) ? undefined: clonedReq.body
+    })
+    c.req.raw = newReq
+  }
+  await next()
+}
 
 /**
  * UrsaAuthの認証情報中継機能を、Auth.js のコア機能のミドルウェアとして

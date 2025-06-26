@@ -154,7 +154,7 @@ export const getCustomRedirectLocation = (locationUrl: URL): URL | undefined  =>
   }
   // モバイル向けカスタムスキーマURLがホワイトリストに入るかチェック
   const customSchemeUrl = new URL(customSchemeUrlString)
-  if (!config.allowedMobileRedirectPatterns.includes(customSchemeUrl.toString())) {
+  if (!config.allowedMobileRedirectPatterns.some(url => customSchemeUrl.toString().startsWith(url))) {
     log(
       'given mobile callback uri pattern is not allowed',
       customSchemeUrl.toString(),
