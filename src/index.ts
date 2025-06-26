@@ -9,7 +9,10 @@ import { authConfig } from './auth'
 import { log } from './log'
 import { config } from './config'
 
-import { ursaAuthMiddleware } from './middleware'
+import { 
+  ursaAuthMiddleware,
+  trustProtoMiddleware,
+} from './middleware'
 import { consumeCode } from './pkce'
 import { getBearerToken, decodeJWE } from './lib'
 
@@ -32,6 +35,8 @@ app.use('*', cors({
 }))
 
 app.use('*', logger())
+
+app.use('*', trustProtoMiddleware)
 
 app.get('/', (c) => {
   return c.text('Hello Hono!')
