@@ -26,14 +26,14 @@
 	<true/>
   <key>LSApplicationQueriesSchemes</key>
   <array>
-    <string>sekirei-todo.faveo-systema.net</string>
+    <string>{{LS_APPLICATION_QUERY_SCHEMES}}</string>
   </array>
   <key>CFBundleURLTypes</key>
   <array>
     <dict>
       <key>CFBundleURLSchemes</key>
       <array>
-        <string>sekirei-todo.faveo-systema.net</string>
+        <string>{{CUSTOM_SCHEME}}</string>
       </array>
     </dict>
   </array>
