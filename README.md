@@ -7,11 +7,15 @@
 
 UrsaAuth is an authentication server built on [Auth.js](https://authjs.dev/) core functions 🐻
 
-<p style="font-size: 50px">🌐📱</p>
-
 Kuma-chan is saying... **it is now on development & experiment phase**.
 
 ## Features
+
+<div align="center">
+  <img style="width: 100%; max-width: 600px" src="icons/ursa-auth-introduction.svg" alt="UrsaAuth description" />
+  <p><em>UrsaAuth description</em></p>
+</div>
+
 1. OAuth provider selections (Google, GitHub, X, ...)
 2. User information encryption
 3. **Web/Mobile universal authentication ← Main feature!!**
