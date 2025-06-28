@@ -46,3 +46,4 @@ app.*.map.json
 
 # ios plist
 ios/Runner/Info.plist
+
