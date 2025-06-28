@@ -17,8 +17,10 @@ Kuma-chan is saying... **it is now on development & experiment phase**.
 </div>
 
 1. OAuth provider selections (Google, GitHub, X, ...)
-2. User information encryption
-3. **Web/Mobile universal authentication ← Main feature!!**
+2. **User information encryption**
+    - pros: decryption & validation in every access with user information, securer.
+    - cons: requires more CPU time than just signature checks, less scalable.
+3. **Web/Mobile universal authentication**
 
 > [!NOTE]
 > Auth.js saves an encrypted user information into browser's cookie, which is not suitable for mobile applications.
