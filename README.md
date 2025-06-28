@@ -1,8 +1,32 @@
 # UrsaAuth
-![UrsaAuth icon](./icons/ursa-auth-icon-color.png)
 
-UrsaAuth is an authentication server for Web/Mobile Login and API server protection.
+<div align="center">
+  <img style="width: 50%; max-width: 300px" src="icons/ursa-auth-icon-color.png" alt="UrsaAuth icon, Kuma-chan" />
+  <p><em>Kuma-chan</em></p>
+</div>
 
+UrsaAuth is an authentication server built on [Auth.js](https://authjs.dev/) core functions 🐻
+
+Kuma-chan is saying... **it is now on development & experiment phase**.
+
+## Features
+
+<div align="center">
+  <img style="width: 100%; max-width: 600px" src="icons/ursa-auth-introduction.svg" alt="UrsaAuth description" />
+  <p><em>UrsaAuth description</em></p>
+</div>
+
+1. OAuth provider selections (Google, GitHub, X, ...)
+2. **User information encryption**
+    - pros: decryption & validation in every access with user information, securer.
+    - cons: requires more CPU time than just signature checks, less scalable.
+3. **Web/Mobile universal authentication**
+
+> [!NOTE]
+> Auth.js saves an encrypted user information into browser's cookie, which is not suitable for mobile applications.
+>
+> UrsaAuth extends Auth.js to pass encrypted user information to Web/Mobile applications with PKCE flow.
+>
 
 # How to setup test environment
 you can test UrsaAuth by running 3 servers in your local environemnt.
