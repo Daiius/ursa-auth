@@ -1,7 +1,7 @@
 # UrsaAuth
 
 <div align="center">
-  <img style="width: 50%; max-width: 300px" src="icons/ursa-auth-icon-color.svg" alt="UrsaAuth icon, Kuma-chan" />
+  <img style="width: 50%; max-width: 300px" src="icons/ursa-auth-icon-color.png" alt="UrsaAuth icon, Kuma-chan" />
   <p><em>Kuma-chan</em></p>
 </div>
 
