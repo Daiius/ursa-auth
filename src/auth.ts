@@ -27,12 +27,6 @@ export const authConfig: AuthConfig = {
         log('url not allowed (Auth.js redirect callback): ', url)
         return baseUrl
       }
-      // 強制https callbackオプションが有効なら置き換え
-      if (config.forceHttpsCallback && url.startsWith('http://')) {
-        const newUrl = url.replace('http://', 'https://')
-        log('forcing https callback: ', url, ' -> ', newUrl)
-        return newUrl
-      }
       return url;
     },
     async jwt({ token, profile }) {
