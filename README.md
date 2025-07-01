@@ -12,7 +12,7 @@ Kuma-chan is saying... **it is now on development & experiment phase**.
 ## Features
 
 <div align="center">
-  <img style="width: 100%; max-width: 600px" src="icons/ursa-auth-introduction.svg" alt="UrsaAuth description" />
+  <img style="width: 100%; max-width: 600px" src="icons/ursa-auth-introduction.png" alt="UrsaAuth description" />
   <p><em>UrsaAuth description</em></p>
 </div>
 
