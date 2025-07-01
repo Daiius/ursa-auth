@@ -9,6 +9,14 @@ export const ursaAuthServerConfigSchema = z.object({
         clientId: z.string(),
         clientSecret: z.string(),
       }).optional(),
+    twitter: z.object({
+        clientId: z.string(),
+        clientSecret: z.string(),
+      }).optional(),
+    google: z.object({
+        clientId: z.string(),
+        clientSecret: z.string(),
+      }),
   }).strict(),
   cors: z.object({
     // 設定しない場合はallowedRedirectPatternsが用いられます
