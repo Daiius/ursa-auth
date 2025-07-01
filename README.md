@@ -28,6 +28,19 @@ Kuma-chan is saying... **it is now on development & experiment phase**.
 > UrsaAuth extends Auth.js to pass encrypted user information to Web/Mobile applications with PKCE flow.
 >
 
+### Current OAuth Provider Checks
+|      |GitHub|Google           |X(Twitter)|<sub>coming soon...</sub>|
+|------|:----:|:---------------:|:--------:|--------------|
+|Web   |✅    |✅<sup>\*1</sup> |✅        ||
+|Mobile|✅    |✅               |✅        ||
+
+
+#### Notes for OAuth Provider Checks
+1. Google OAuth 2.0 does not allow `*.localhost` for callback\_uri.
+   We replaced `auth.localhost` to `localhost:4000` in the browser url bar while testing,
+   so that Auth.js sets callback\_uri to `locahost:4000/api/auth/callback/google`,
+   which is set to Google OAuth configurations.
+
 # How to setup test environment
 you can test UrsaAuth by running 3 servers in your local environemnt.
 - UrsaAuth server
