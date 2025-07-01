@@ -16,7 +16,7 @@ export const ursaAuthServerConfigSchema = z.object({
     google: z.object({
         clientId: z.string(),
         clientSecret: z.string(),
-      }),
+      }).optional(),
   }).strict(),
   cors: z.object({
     // 設定しない場合はallowedRedirectPatternsが用いられます
