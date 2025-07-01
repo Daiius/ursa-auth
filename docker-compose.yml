@@ -8,6 +8,8 @@ services:
       dockerfile: Dockerfile.ursa-auth
       context: .
     container_name: ursa-auth-dev
+    ports:
+      - 4000:4000 # for Google OAuth redirect_uri restriction
     env_file:
       - .env.development
     volumes:
